@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pricedrop-dep
+  labels:
+    app: pricedrop-dep
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pricedrop-web
+  template:
+    metadata:
+      labels:
+        app: pricedrop-web
+    spec:
+      containers:
+        - name: webapp
+          image: satya4236/pricedrop:1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+      imagePullSecrets:
+        - name: docker-hub-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pricedrop-web
+spec:
+  type: ClusterIP
+  selector:
+    app: pricedrop-web
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pricedrop-web
+spec:
+  type: ClusterIP
+  selector:
+    app: pricedrop-web
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
