@@ -4,7 +4,7 @@ Designed Price Drop And Stock Alert System using High Level Design and Low Level
 
 ## Register Page, Bcrypt hashing:
 
-The user registers in the system by filling the details like name, mobile number, email, password and clicking the submit button in the user registration page. Then a random 7 digit OTP is sent to the user-provided email with admin mail as sender mail. Once the user enters the correct OTP, then only the user will be registered and the details will be stored in the user table which contains userid, email, mobile number, password, role, username. The userid will be filled with the user id counter value from the sequence table; once it is consumed, the user id value will be incremented by one in the sequence table. The reason is Cassandra doesn't have an auto-increment feature. Remaining values like email, mobile number, and username are filled normally; by default, role is filled as role_user and password is stored in Bcrypt hash format like $2a$10$adf.. where $2a represents bcrypt hashing and $10 represents workfactor, meaning the number of iterations used to hash the password. Once the user is registered successfully, the user is redirected to the login page.
+The user registers in the system by filling the details like name, mobile number, email, password and clicking the submit button in the user registration page. Then a random 5 digit OTP is sent to the user-provided email with admin mail as sender mail. Once the user enters the correct OTP, then only the user will be registered and the details will be stored in the user table which contains userid, email, mobile number, password, role, username. The userid will be filled with the user id counter value from the sequence table; once it is consumed, the user id value will be incremented by one in the sequence table. The reason is Cassandra doesn't have an auto-increment feature. Remaining values like email, mobile number, and username are filled normally; by default, role is filled as role_user and password is stored in Bcrypt hash format like $2a$10$adf.. where $2a represents bcrypt hashing and $10 represents workfactor, meaning the number of iterations used to hash the password. Once the user is registered successfully, the user is redirected to the login page.
 
 ## Login Page, Authentication:
 
@@ -62,5 +62,99 @@ The round robin strategy we used in load balancing is creating problem of sessio
 
 ##Problem of local hosting:
 The application deployed on local machine can be accessible over devices which are connected with same network as local machine for example we can access the application using wifi ip address but the problem is the wifi address is dynamic and can change overtime remembering it and checking ip address everytime using ip config command is a difficult task and the other problem is the application doesn't run when the local machine is turned off.To address above problems the solution i proposed is to deploy the application on virtual machine which has static ip address and the application runs 24*7 still the problem with this is remembering the ip address of the VM to access the application to overcome this problem i configured DNS with iittp domain so there is no need to remember ip address.The IP address assigned to virtual machine by my college is 10.21.4.56 and the domain i got configured is pdsa.iittp.ac.in and i deployed my application on the virtual machine from now on the earlier links which have localhost can be replaced with pdsa.iittp.ac.in and my application is accessible with the url *http://pdsa.iittp.ac.in* and the url will be accessible only on devices connected to college network as virtual machine ip is private to college and the GitHub url for my project is *https://github.com/NagaSatyaSaiPavirala/PriceDropAndStockAlertSystem*.
+
+
+
+## Running Instructions
+
+First start redis, mongo, cassandra containers
+
+```bash
+docker start redis mongo Cassandra
+```
+
+Navigate to the kafka folder and use below docker compose command
+
+```bash
+docker compose up -d
+```
+
+Build the react code
+
+```bash
+npm run build
+```
+
+Build docker image as react-frontend for react code
+
+```bash
+docker build -t react-frontend .
+```
+
+Run the image on react-frontend container exposing port number 3000
+
+```bash
+docker run -d --name react-frontend -p 3000:8080 react-frontend
+```
+
+Create jar file for discovery spring boot code
+
+```bash
+mvn clean install -DskipTests
+```
+
+Build docker image as discovery for spring boot code
+
+```bash
+docker build -f Dockerfile -t discovery .
+```
+
+Run the image on discovery container exposing port number 9001
+
+```bash
+docker run -d --name discovery -p 9001:9001 discovery
+```
+
+Create jar file for pricedrop spring boot code
+
+```bash
+mvn clean install -DskipTests
+```
+
+Build docker image as pricedrop for spring boot code
+
+```bash
+docker build -f Dockerfile -t pricedrop .
+```
+
+Run the image on pricedrop container exposing port number 8080. If wanted load balancing skip below command
+
+```bash
+docker run --name pricedrop -p 8080:8080 pricedrop
+```
+
+Run the Kubernetes dashboard exposing port number 8443
+
+```bash
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443
+```
+
+Apply deployment.yaml file
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+Apply nginx.yaml file
+
+```bash
+kubectl apply -f nginx.yaml
+```
+
+Forward nginx service to port number 8080
+
+```bash
+kubectl port-forward service/nginx-service 8080:8080
+```
 
 
